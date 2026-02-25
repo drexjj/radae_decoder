@@ -9,6 +9,7 @@
 #include "meter_widget.h"
 #include "rade_decoder.h"
 #include "rade_encoder.h"
+#include "rig_control.h"
 #include "spectrum_widget.h"
 #include "waterfall_widget.h"
 #include "wav_recorder.h"
@@ -37,6 +38,7 @@ static GtkWidget*               g_spectrum           = nullptr;   // spectrum wi
 static GtkWidget*               g_waterfall          = nullptr;   // waterfall widget
 static GtkWidget*               g_status             = nullptr;   // status label
 static GtkWidget*               g_settings_dlg       = nullptr;   // settings dialog
+static GtkWidget*               g_rig_dlg            = nullptr;   // rig control dialog
 static GtkWidget*               g_callsign_entry     = nullptr;   // station callsign
 static GtkWidget*               g_gridsquare_entry   = nullptr;   // station gridsquare
 static GtkWidget*               g_mic_slider         = nullptr;   // TX mic input level slider
@@ -88,6 +90,9 @@ static void save_config()
         f << "callsign=" << cs << '\n';
         const char* gs = g_gridsquare_entry ? gtk_entry_get_text(GTK_ENTRY(g_gridsquare_entry)) : "";
         f << "gridsquare=" << gs << '\n';
+        f << "rig_model_id=" << rig_config_get_model_id() << '\n';
+        f << "rig_port="     << rig_config_get_port()     << '\n';
+        f << "rig_baud="     << rig_config_get_baud()     << '\n';
     }
 }
 
@@ -98,6 +103,7 @@ static bool restore_config()
     if (!f) return false;
 
     std::string saved_in, saved_out, saved_tx_in, saved_tx_out, saved_callsign, saved_gridsquare;
+    std::string saved_rig_model_id, saved_rig_port, saved_rig_baud;
     int saved_tx_level = -1;
     int saved_mic_level = -1;
     int saved_bpf_enabled = -1;
@@ -121,6 +127,12 @@ static bool restore_config()
             saved_callsign = line.substr(9);
         else if (line.compare(0, 11, "gridsquare=") == 0)
             saved_gridsquare = line.substr(11);
+        else if (line.compare(0, 13, "rig_model_id=") == 0)
+            saved_rig_model_id = line.substr(13);
+        else if (line.compare(0, 9, "rig_port=") == 0)
+            saved_rig_port = line.substr(9);
+        else if (line.compare(0, 9, "rig_baud=") == 0)
+            saved_rig_baud = line.substr(9);
     }
 
     if (saved_in.empty() && saved_out.empty()) return false;
@@ -170,6 +182,8 @@ static bool restore_config()
         gtk_entry_set_text(GTK_ENTRY(g_callsign_entry), saved_callsign.c_str());
     if (!saved_gridsquare.empty() && g_gridsquare_entry)
         gtk_entry_set_text(GTK_ENTRY(g_gridsquare_entry), saved_gridsquare.c_str());
+
+    rig_config_restore(saved_rig_model_id, saved_rig_port, saved_rig_baud);
 
     return (in_idx >= 0 && out_idx >= 0);
 }
@@ -683,10 +697,20 @@ static void on_settings(GtkMenuItem* /*item*/, gpointer /*data*/)
         gtk_widget_show_all(g_settings_dlg);
 }
 
+/* Edit > Rig Control */
+static void on_rig_control(GtkMenuItem* /*item*/, gpointer /*data*/)
+{
+    if (g_rig_dlg)
+        gtk_widget_show_all(g_rig_dlg);
+}
+
 /* ── UI construction ────────────────────────────────────────────────────── */
 
 static void activate(GtkApplication* app, gpointer /*data*/)
 {
+    /* ── load hamlib backends (before any UI) ────────────────────── */
+    rig_control_init();
+
     /* ── CSS ───────────────────────────────────────────────────────── */
     GtkCssProvider* css = gtk_css_provider_new();
     gtk_css_provider_load_from_data(css, R"CSS(
@@ -776,10 +800,17 @@ static void activate(GtkApplication* app, gpointer /*data*/)
                                GDK_KEY_comma, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_menu_shell_append(GTK_MENU_SHELL(edit_menu), settings_mi);
 
+    GtkWidget* rig_mi = gtk_menu_item_new_with_label("Rig Control\xe2\x80\xa6");
+    g_signal_connect(rig_mi, "activate", G_CALLBACK(on_rig_control), nullptr);
+    gtk_menu_shell_append(GTK_MENU_SHELL(edit_menu), rig_mi);
+
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(edit_mi), edit_menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), edit_mi);
 
     gtk_box_pack_start(GTK_BOX(outer_vbox), menubar, FALSE, FALSE, 0);
+
+    /* ── rig control dialog (created hidden, shown from Edit > Rig Control) ── */
+    g_rig_dlg = rig_control_create_dialog(window);
 
     /* ── settings dialog (created hidden, shown from Edit > Settings) ── */
     g_settings_dlg = gtk_dialog_new_with_buttons(

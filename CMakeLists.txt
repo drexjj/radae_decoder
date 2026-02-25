@@ -10,6 +10,7 @@ find_package(PkgConfig  REQUIRED)
 find_package(Threads    REQUIRED)
 
 pkg_check_modules(GTK       REQUIRED gtk+-3.0)
+pkg_check_modules(HAMLIB    REQUIRED hamlib)
 
 # ── audio backend selection ───────────────────────────────────────────────────
 # Default: PORTAUDIO on macOS, ALSA on Linux.
@@ -142,6 +143,7 @@ add_executable(RADAE_Gui
     src/rade_decoder.cpp
     src/rade_encoder.cpp
     src/EooCallsignCodec.cpp
+    src/rig_control.cpp
     src/spectrum_widget.cpp
     src/waterfall_widget.cpp
     src/wav_recorder.cpp
@@ -150,6 +152,7 @@ add_executable(RADAE_Gui
 
 target_include_directories(RADAE_Gui PRIVATE
     ${GTK_INCLUDE_DIRS}
+    ${HAMLIB_INCLUDE_DIRS}
     ${AUDIO_BACKEND_INCS}
     ${OPUS_SOURCE_DIR}/dnn
     ${OPUS_SOURCE_DIR}/celt
@@ -162,9 +165,12 @@ target_link_libraries(RADAE_Gui
     opus
     m
     ${GTK_LIBRARIES}
+    ${HAMLIB_LIBRARIES}
     ${AUDIO_BACKEND_LIBS}
     Threads::Threads
 )
+
+link_directories(${HAMLIB_LIBRARY_DIRS})
 
 target_compile_options(RADAE_Gui PRIVATE
     ${GTK_CFLAGS_OTHER}
