@@ -77,6 +77,7 @@ The RADAE codec uses a 30-carrier OFDM waveform in ~1.3 kHz bandwidth. Each 120 
 - ALSA runtime libraries (`libasound2`) — default audio backend
   - PulseAudio (`libpulse0`) if built with `-DAUDIO_BACKEND=PULSE`
   - PortAudio if built with `-DAUDIO_BACKEND=PORTAUDIO`
+- hamlib
 - X11 or Wayland display server
 
 ### Build-time
@@ -89,6 +90,7 @@ The RADAE codec uses a 30-carrier OFDM waveform in ~1.3 kHz bandwidth. Each 120 
   - `libgtk-3-dev`
   - `libasound2-dev` (if using `-DAUDIO_BACKEND=ALSA`)
   - `libpulse-dev` (if using `-DAUDIO_BACKEND=PULSE` default on Linux)
+  - `libhamlib-dev`
   - `libcairo2-dev` (usually pulled in by GTK3)
 
 ### Install dependencies (Debian/Ubuntu)
@@ -96,7 +98,7 @@ The RADAE codec uses a 30-carrier OFDM waveform in ~1.3 kHz bandwidth. Each 120 
 # Default (ALSA backend)
 sudo apt-get install build-essential cmake \
   libgtk-3-dev libasound2-dev pkg-config \
-  autoconf automake libtool
+  autoconf automake libtool libpulse-dev libhamlib-dev
 
 # Optional: PulseAudio backend
 sudo apt-get install libpulse-dev
