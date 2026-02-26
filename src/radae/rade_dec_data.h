@@ -9,9 +9,9 @@
 
 #include "opus_types.h"
 
-#include "rade_core.h"
+#include "../src/radae_top/rade_core.h"
 
-#include "rade_constants.h"
+#include "../src/radae_top/rade_constants.h"
 
 
 #define DEC_DENSE1_OUT_SIZE 96

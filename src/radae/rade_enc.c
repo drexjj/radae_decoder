@@ -34,7 +34,7 @@
 
 #include "rade_enc.h"
 #include "os_support.h"
-#include "rade_constants.h"
+#include "../src/radae_top/rade_constants.h"
 
 void rade_init_encoder(RADEEncState *enc_state)
 {

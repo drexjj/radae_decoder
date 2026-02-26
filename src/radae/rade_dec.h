@@ -28,7 +28,7 @@
 #ifndef RADE_DEC_H
 #define RADE_DEC_H
 
-#include "rade_core.h"
+#include "../src/radae_top/rade_core.h"
 #include "rade_dec_data.h"
 
 struct RADEDecStruct {

@@ -28,7 +28,7 @@
 #ifndef RADE_ENC_H
 #define RADE_ENC_H
 
-#include "rade_core.h"
+#include "../src/radae_top/rade_core.h"
 
 #include "rade_enc_data.h"
 

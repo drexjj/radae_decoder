@@ -1,5 +1,5 @@
 #include "rade_encoder.h"
-#include "wav_recorder.h"
+#include "../src/wav/wav_recorder.h"
 
 #include <complex>
 #include <cmath>

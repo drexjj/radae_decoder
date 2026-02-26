@@ -1,6 +1,6 @@
 #include "rade_decoder.h"
 #include "../src/eoo/EooCallsignCodec.h"
-#include "wav_recorder.h"
+#include "../src/wav/wav_recorder.h"
 
 #include <cmath>
 #include <cstring>

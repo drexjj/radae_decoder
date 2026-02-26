@@ -19,7 +19,7 @@ extern "C" {
 /* ── RadaeEncoder ──────────────────────────────────────────────────────────
  *
  *  Real-time RADAE encoder pipeline:
- *    PortAudio capture (mic 16 kHz) → LPCNet features → RADE Tx → real → PortAudio playback (radio 8 kHz)
+ *    Audio capture (mic 16 kHz) → LPCNet features → RADE Tx → real → Audio playback (radio 8 kHz)
  *
  *  All processing runs on a dedicated thread.  Status is exposed via atomics.
  * ──────────────────────────────────────────────────────────────────────── */

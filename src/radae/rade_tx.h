@@ -40,7 +40,7 @@
 #include "rade_ofdm.h"
 #include "rade_bpf.h"
 #include "rade_enc.h"
-#include "rade_core.h"
+#include "../src/radae_top/rade_core.h"
 
 #ifdef __cplusplus
 extern "C" {

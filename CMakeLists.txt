@@ -95,10 +95,10 @@ target_link_libraries(webrx_rade_decode rade opus m)
 add_executable(radae_headless
     src/tools/radae_headless.cpp
     src/audio/audio_input.cpp
-    src/rade_decoder.cpp
-    src/rade_encoder.cpp
+    src/radae_top/rade_decoder.cpp
+    src/radae_top/rade_encoder.cpp
     src/eoo/EooCallsignCodec.cpp
-    src/wav_recorder.cpp
+    src/wav/wav_recorder.cpp
     ${AUDIO_BACKEND_SRC}
 )
 target_link_libraries(radae_headless
@@ -127,13 +127,13 @@ add_executable(RADAE_Gui
     src/gui/main.cpp
     src/audio/audio_input.cpp
     src/gui/meter_widget.cpp
-    src/rade_decoder.cpp
-    src/rade_encoder.cpp
+    src/radae_top/rade_decoder.cpp
+    src/radae_top/rade_encoder.cpp
     src/eoo/EooCallsignCodec.cpp
     src/gui/rig_control.cpp
     src/gui/spectrum_widget.cpp
     src/gui/waterfall_widget.cpp
-    src/wav_recorder.cpp
+    src/wav/wav_recorder.cpp
     ${AUDIO_BACKEND_SRC}
 )
 

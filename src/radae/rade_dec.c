@@ -30,7 +30,7 @@
 #endif
 
 #include "rade_dec.h"
-#include "rade_constants.h"
+#include "../src/radae_top/rade_constants.h"
 #include "os_support.h"
 
 void rade_init_decoder(RADEDecState *dec_state)

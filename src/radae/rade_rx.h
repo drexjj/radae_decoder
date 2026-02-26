@@ -42,7 +42,7 @@
 #include "rade_bpf.h"
 #include "rade_acq.h"
 #include "rade_dec.h"
-#include "rade_core.h"
+#include "../src/radae_top/rade_core.h"
 
 #ifdef __cplusplus
 extern "C" {

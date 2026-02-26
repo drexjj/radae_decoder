@@ -7,12 +7,12 @@
 
 #include "../src/audio/audio_input.h"
 #include "meter_widget.h"
-#include "rade_decoder.h"
-#include "rade_encoder.h"
+#include "../src/radae_top/rade_decoder.h"
+#include "../src/radae_top/rade_encoder.h"
 #include "rig_control.h"
 #include "spectrum_widget.h"
 #include "waterfall_widget.h"
-#include "wav_recorder.h"
+#include "../src/wav/wav_recorder.h"
 
 /* ── globals (single-window app) ────────────────────────────────────────── */
 
