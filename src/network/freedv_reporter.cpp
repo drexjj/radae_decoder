@@ -203,6 +203,7 @@ void FreeDVReporter::requestQsy(const std::string& destSid,
 
 void FreeDVReporter::connect()
 {
+    fprintf(stderr, "reporter::connect()\n");
     // Build the Socket.IO auth JSON object according to the role.
     std::string auth;
 

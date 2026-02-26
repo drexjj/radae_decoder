@@ -274,6 +274,8 @@ static uint64_t rig_freq_hz()
    Only called after the settings widgets exist (end of activate() or later). */
 static void reporter_restart()
 {
+    fprintf(stderr, "reporter_restart()\n");
+    
     delete g_reporter;
     g_reporter = nullptr;
 

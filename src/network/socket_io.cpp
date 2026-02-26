@@ -97,6 +97,7 @@ void SocketIO::connect(const std::string& host, int port,
     const std::string url = "ws://" + host + ":" + std::to_string(port)
                           + "/socket.io/?EIO=4&transport=websocket";
     ws_->setUrl(url);
+    fprintf(stderr, "reporter url = %s\n", url.c_str());
 
     // IXWebSocket fires this callback from its own background thread.
     ws_->setOnMessageCallback([this](const ix::WebSocketMessagePtr& msg) {
@@ -149,7 +150,7 @@ void SocketIO::emit(const std::string& event, const std::string& dataJson)
         packet += dataJson;
     }
     packet += ']';
-
+    fprintf(stderr, "%s\n", packet.c_str());
     sendRaw(packet);
 }
 
@@ -162,6 +163,7 @@ void SocketIO::sendRaw(const std::string& packet)
 
 void SocketIO::onRawMessage(const std::string& msg)
 {
+    fprintf(stderr, "onRawMessage(%s)\n", msg.c_str());
     if (msg.empty()) return;
 
     switch (msg[0]) {
