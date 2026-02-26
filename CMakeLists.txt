@@ -9,6 +9,22 @@ set(CMAKE_C_STANDARD 11)
 find_package(PkgConfig  REQUIRED)
 find_package(Threads    REQUIRED)
 
+# ── IXWebSocket (plain WebSocket client, no TLS required for ws://) ───────────
+include(FetchContent)
+
+# Disable features that would add extra system dependencies.
+set(USE_TLS  OFF CACHE BOOL "Disable TLS in IXWebSocket"  FORCE)
+set(USE_ZLIB OFF CACHE BOOL "Disable zlib in IXWebSocket" FORCE)
+set(IXWEBSOCKET_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    IXWebSocket
+    GIT_REPOSITORY https://github.com/machinezone/IXWebSocket.git
+    GIT_TAG        v11.4.4
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(IXWebSocket)
+
 pkg_check_modules(GTK       REQUIRED gtk+-3.0)
 pkg_check_modules(HAMLIB    REQUIRED hamlib)
 
@@ -48,6 +64,20 @@ message(STATUS "Audio backend: ${AUDIO_BACKEND}")
 link_directories(${GTK_LIBRARY_DIRS})
 
 add_subdirectory(src/yyjson)
+
+# ── FreeDV Reporter network library ───────────────────────────────────────────
+add_library(network STATIC
+    src/network/socket_io.cpp
+    src/network/freedv_reporter.cpp
+)
+target_include_directories(network PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(network PUBLIC
+    ixwebsocket
+    yyjson
+    Threads::Threads
+)
 
 # ── Opus (with FARGAN/LPCNet support) ────────────────────────────────────────
 include(cmake/BuildOpus.cmake)
@@ -154,6 +184,7 @@ target_link_libraries(RADAE_Gui
     ${GTK_LIBRARIES}
     ${HAMLIB_LIBRARIES}
     ${AUDIO_BACKEND_LIBS}
+    network
     Threads::Threads
 )
 

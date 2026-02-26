@@ -456,14 +456,6 @@ Double-clicking a row in the station list sends the displayed frequency to the c
 
 ---
 
-## PSK Reporter Integration
-
-FreeDV GUI also supports reporting to **PSK Reporter** (`report.pskreporter.info:4739`) via a separate `PskReporter` class. This uses a **UDP binary protocol** (IPFIX/NetFlow-style), not JSON or Socket.IO. It implements the same `IReporter` interface as `FreeDVReporter` but only the `addReceiveRecord()` and `send()` methods are active; frequency and TX state changes are no-ops.
-
-Received spots are batched and sent periodically. The decoded mode is always reported as `"FREEDV"`.
-
----
-
 ## `IReporter` Interface
 
 Both reporting backends implement this abstract interface:
