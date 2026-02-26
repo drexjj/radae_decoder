@@ -13,6 +13,9 @@
 #include "spectrum_widget.h"
 #include "waterfall_widget.h"
 #include "../src/wav/wav_recorder.h"
+#include "../network/freedv_reporter.h"
+
+#include <algorithm>   // std::clamp
 
 /* ── globals (single-window app) ────────────────────────────────────────── */
 
@@ -47,6 +50,9 @@ static GtkWidget*               g_mic_slider         = nullptr;   // TX mic inpu
 static GtkWidget*               g_tx_slider          = nullptr;   // TX output level slider
 static guint                    g_timer              = 0;         // meter update timer
 static bool                     g_updating_combos    = false;     // guard programmatic changes
+static FreeDVReporter*          g_reporter           = nullptr;   // FreeDV Reporter client
+static std::string              g_last_rx_callsign;               // last callsign sent to reporter
+static uint64_t                 g_last_reporter_freq = 0;         // last frequency sent to reporter
 
 /* ── config persistence ─────────────────────────────────────────────────── */
 
@@ -251,8 +257,43 @@ static void update_rig_status_label()
     gtk_label_set_text(GTK_LABEL(g_rig_status_lbl), buf);
 }
 
+/* Parse a rig frequency string (e.g. "14.225.000 MHz") to whole Hz.
+   Returns 0 when no rig is connected or the string is empty. */
+static uint64_t rig_freq_hz()
+{
+    if (!rig_is_connected()) return 0;
+    const std::string s = rig_get_current_freq();
+    std::string digits;
+    for (char c : s)
+        if (c >= '0' && c <= '9') digits += c;
+    return digits.empty() ? 0 : std::stoull(digits);
+}
+
+/* (Re)create the FreeDV Reporter with the current callsign and grid square.
+   Safe to call at any time; deletes and replaces any existing instance.
+   Only called after the settings widgets exist (end of activate() or later). */
+static void reporter_restart()
+{
+    delete g_reporter;
+    g_reporter = nullptr;
+
+    const char* cs = g_callsign_entry
+                   ? gtk_entry_get_text(GTK_ENTRY(g_callsign_entry)) : "";
+    const char* gs = g_gridsquare_entry
+                   ? gtk_entry_get_text(GTK_ENTRY(g_gridsquare_entry)) : "";
+
+    g_reporter = new FreeDVReporter(cs ? cs : "", gs ? gs : "", "RADAEV1c");
+    g_reporter->connect();
+
+    g_last_rx_callsign.clear();
+    g_last_reporter_freq = 0;
+}
+
 static void stop_all()
 {
+    /* Capture TX state before threads are stopped. */
+    const bool was_transmitting = g_encoder && g_encoder->is_running();
+
     fprintf(stderr, "stop_all()\n");
     /* Stop threads first so the EOO frame is flushed into the recorder,
        then detach the recorder once the threads have finished. */
@@ -269,12 +310,26 @@ static void stop_all()
     set_btn_state(false);
     rig_control_set_ptt(false);       /* release PTT if rig is connected */
     update_rig_status_label();        /* refresh immediately; timer is now stopped */
+
+    /* Tell the reporter we stopped transmitting. */
+    if (g_reporter && was_transmitting)
+        g_reporter->transmit("RADAEV1c", false);
 }
 
 /* timer tick – update meter + status at ~30 fps */
 static gboolean on_meter_tick(gpointer /*data*/)
 {
     update_rig_status_label();
+
+    /* ── report frequency changes to FreeDV Reporter ──────────────── */
+    if (g_reporter) {
+        const uint64_t cur_freq = rig_freq_hz();
+        if (cur_freq != g_last_reporter_freq) {
+            g_last_reporter_freq = cur_freq;
+            if (cur_freq > 0)
+                g_reporter->freqChange(cur_freq);
+        }
+    }
 
     /* ── TX mode ─────────────────────────────────────────────────────── */
     if (g_encoder && g_encoder->is_running()) {
@@ -302,6 +357,15 @@ static gboolean on_meter_tick(gpointer /*data*/)
     /* ── RX mode ─────────────────────────────────────────────────────── */
     if (!g_decoder) return TRUE;
     std::string cs = g_decoder->last_callsign();
+
+    /* Report newly decoded callsigns to FreeDV Reporter. */
+    if (g_reporter && !cs.empty() && cs != g_last_rx_callsign) {
+        g_last_rx_callsign = cs;
+        const signed char snr = static_cast<signed char>(
+            std::clamp(g_decoder->snr_dB(), -128.0f, 127.0f));
+        g_reporter->addReceiveRecord(cs, "RADAEV1c", rig_freq_hz(), snr);
+    }
+
     char buf[256];
     if (!g_decoder->is_running()) {
         /* decoder stopped itself (e.g. file playback finished) */
@@ -410,6 +474,8 @@ static void start_encoder(int mic_idx, int radio_idx)
     }
     g_encoder->start();
     rig_control_set_ptt(true);        /* key the rig if connected */
+    if (g_reporter)
+        g_reporter->transmit("RADAEV1c", true);
     if (g_recording && g_recorder)
         g_encoder->set_recorder(g_recorder);
     set_btn_state(true);
@@ -448,7 +514,7 @@ static void on_tx_combo_changed(GtkComboBox* /*combo*/, gpointer /*data*/)
     save_config();
 }
 
-/* callsign entry changed: save config and update running encoder */
+/* callsign entry changed: save config, update running encoder, reconnect reporter */
 static void on_callsign_changed(GtkEditable* /*e*/, gpointer /*data*/)
 {
     save_config();
@@ -456,12 +522,15 @@ static void on_callsign_changed(GtkEditable* /*e*/, gpointer /*data*/)
         const char* cs = gtk_entry_get_text(GTK_ENTRY(g_callsign_entry));
         g_encoder->set_callsign(cs ? cs : "");
     }
+    /* Only reconnect after the initial reporter has been created (end of activate). */
+    if (g_reporter) reporter_restart();
 }
 
-/* gridsquare entry changed: save config */
+/* gridsquare entry changed: save config and reconnect reporter */
 static void on_gridsquare_changed(GtkEditable* /*e*/, gpointer /*data*/)
 {
     save_config();
+    if (g_reporter) reporter_restart();
 }
 
 /* TX switch toggled: stop current mode and start the new one */
@@ -1119,6 +1188,9 @@ static void activate(GtkApplication* app, gpointer /*data*/)
 
     /* ── auto-connect to rig if settings were saved ─────────────── */
     rig_auto_connect(GTK_WINDOW(window));
+
+    /* ── connect to FreeDV Reporter ─────────────────────────────── */
+    reporter_restart();
 }
 
 /* ── entry point ────────────────────────────────────────────────────────── */
