@@ -81,12 +81,12 @@ add_executable(real2iq src/tools/real2iq.c)
 target_link_libraries(real2iq m)
 
 # Reads a RADE WAV file and writes a decoded audio WAV
-add_executable(rade_demod src/tools/rade_demod.cpp src/EooCallsignCodec.cpp)
+add_executable(rade_demod src/tools/rade_demod.cpp src/eoo/EooCallsignCodec.cpp)
 target_link_libraries(rade_demod rade opus m)
 
 # Reads a WAV file containing speech audio and writes a WAV
 # file containing RADE OFDM encoded audio.
-add_executable(rade_modulate src/tools/rade_modulate.cpp src/EooCallsignCodec.cpp)
+add_executable(rade_modulate src/tools/rade_modulate.cpp src/eoo/EooCallsignCodec.cpp)
 target_link_libraries(rade_modulate rade opus m)
 
 add_executable(webrx_rade_decode src/tools/webrx_rade_decode.c)
@@ -97,7 +97,7 @@ add_executable(radae_headless
     src/audio/audio_input.cpp
     src/rade_decoder.cpp
     src/rade_encoder.cpp
-    src/EooCallsignCodec.cpp
+    src/eoo/EooCallsignCodec.cpp
     src/wav_recorder.cpp
     ${AUDIO_BACKEND_SRC}
 )
@@ -129,7 +129,7 @@ add_executable(RADAE_Gui
     src/meter_widget.cpp
     src/rade_decoder.cpp
     src/rade_encoder.cpp
-    src/EooCallsignCodec.cpp
+    src/eoo/EooCallsignCodec.cpp
     src/rig_control.cpp
     src/spectrum_widget.cpp
     src/waterfall_widget.cpp

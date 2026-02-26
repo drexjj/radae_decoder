@@ -59,7 +59,7 @@ extern "C" {
 #include "arch.h"
 #include "cpu_support.h"
 }
-#include "EooCallsignCodec.h"
+#include "../src/eoo/EooCallsignCodec.h"
 
 /* ---- WAV file I/O ---- */
 

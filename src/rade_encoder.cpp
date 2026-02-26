@@ -15,7 +15,7 @@ extern "C" {
 #include "cpu_support.h"
 }
 
-#include "EooCallsignCodec.h"
+#include "../src/eoo/EooCallsignCodec.h"
 
 #include <chrono>
 #include <thread>
