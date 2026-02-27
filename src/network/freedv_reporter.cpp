@@ -221,7 +221,7 @@ void FreeDVReporter::connect()
              + "\"protocol_version\":2"
              + "}";
     }
-
+    
     sio_.connect(host_, port_, auth);
 }
 
@@ -307,6 +307,8 @@ void FreeDVReporter::onConnectionSuccessful(const std::string& /*data*/)
 
 void FreeDVReporter::onNewConnection(const std::string& data)
 {
+    std::cerr << "onNewConnection" << '\n';
+
     if (data.empty()) return;
 
     yyjson_doc* doc = yyjson_read(data.c_str(), data.size(), 0);
@@ -329,6 +331,7 @@ void FreeDVReporter::onNewConnection(const std::string& data)
     {
         std::lock_guard<std::mutex> lock(stationMutex_);
         stations_[info.sid] = std::move(info);
+        std::cerr << "sid = " << info.sid << '\n';
     }
 
     if (!suppressUpdateCb_ && stationUpdateCb_) stationUpdateCb_();
