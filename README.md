@@ -269,36 +269,6 @@ SYNC SNR: 12.3 dB  Freq: +1.5 Hz  In: 0.45  Out: 0.62
 
 ## Architecture
 
-### Code structure
-
-```
-radae_decoder/
-├── CMakeLists.txt              # Top-level build (GTK, audio backend, radae)
-├── README.md
-├── src/
-│   ├── main.cpp                # GTK application, UI, event handlers
-│   ├── rade_decoder.h/cpp      # RADAE decode pipeline (capture -> decode -> playback)
-│   ├── rade_encoder.h/cpp      # RADAE encode pipeline (mic -> encode -> radio)
-│   ├── audio_input.h/cpp       # Audio device enumeration helper
-│   ├── audio_stream.h          # AudioStream abstract interface
-│   ├── audio_stream_alsa.cpp   # ALSA backend (Linux default)
-│   ├── audio_stream_pulse.cpp  # PulseAudio backend
-│   ├── audio_stream_portaudio.cpp  # PortAudio backend (macOS default)
-│   ├── meter_widget.h/cpp      # Cairo-based bar meter widget
-│   ├── spectrum_widget.h/cpp   # Cairo-based spectrum display
-│   └── waterfall_widget.h/cpp  # Cairo-based waterfall display
-└── radae_nopy/                 # RADAE codec library (C, builds librade + opus)
-    ├── CMakeLists.txt
-    ├── cmake/BuildOpus.cmake   # Downloads & builds Opus with FARGAN/LPCNet
-    └── src/
-        ├── rade_api.h          # Public C API
-        ├── rade_rx.c           # Receiver (sync state machine, OFDM demod)
-        ├── rade_enc/dec*.c     # Neural encoder/decoder + compiled weights
-        ├── rade_ofdm.c         # OFDM modulation/demodulation
-        ├── rade_acq.c          # Pilot acquisition & tracking
-        └── ...
-```
-
 ### Component overview
 
 | Module | Responsibility |
