@@ -514,11 +514,10 @@ Client                              Server
 
 # Example
 ```
-15:33:01 [30] INFO /home/marksp/freedv-rade/freedv-gui/src/util/ulog_logger.h:127: [connect] WebSocket Connection iostream transport v-2 "WebSocket++/0.8.2" /socket.io/?EIO=4&transport=websocket 101
-sending: 0x702d5c0038b0
-received: 0{"sid":"ce96_jsUnYONhppMDW5M","upgrades":[],"pingTimeout":5000,"pingInterval":5000,"maxPayload":1000000}
-15:33:01 [31] INFO /home/marksp/freedv-rade/freedv-gui/src/util/SocketIoClient.cpp:213: engine.io open
-received: 40{"sid":"-PhCpCSB7YSc18CoDW5N"}
-15:33:02 [32] INFO /home/marksp/freedv-rade/freedv-gui/src/util/SocketIoClient.cpp:282: socket.io connect
-received: 42["new_connection",{"sid":"-PhCpCSB7YSc18CoDW5N","last_update":"2026-02-27T04:33:01.899735+00:00","callsign":"VK3TPM","grid_square":"QF22ds","version":"FreeDV 2.3.0-dev-1e14","rx_only":false,"os":"linux","connect_time":"2026-02-27T04:33:01.899720+00:00"}]
-received: 42["bulk_update",[["new_connection",{"sid":"JwL2YYl-ky3GKb_nDLM-","last_update":"2026-02-26T06:50:06.552962+00:00","callsign":"KJ0CFW","grid_square":"DM78pr","version":"FreeDV 2.2.1","rx_only":false,"os":"windows","connect_time":"2026-02-24T18:36:32.714673+00:00"}],["freq_change",{"sid":"JwL2YYl-ky3GKb_nDLM-","last_update":"2026-02-26T06:50:06.552962+00:00","callsign":"KJ0CFW","grid_square":"DM78pr","freq
+sending: 40{"role":"report","callsign":"VK3TPM","grid_square":"QF22ds","version":"FreeDV 2.3.0-dev-1e14","rx_only":false,"os":"linux","protocol_version":2}
+received: 0{"sid":"ktsRPwdlzl4BihCkDW6g","upgrades":[],"pingTimeout":5000,"pingInterval":5000,"maxPayload":1000000}
+15:53:17 [30] INFO /home/marksp/freedv-rade/freedv-gui/src/util/SocketIoClient.cpp:213: engine.io open
+received: 40{"sid":"fHuWQy_J036fYqKMDW6h"}
+15:53:17 [31] INFO /home/marksp/freedv-rade/freedv-gui/src/util/SocketIoClient.cpp:282: socket.io connect
+received: 42["new_connection",{"sid":"fHuWQy_J036fYqKMDW6h","last_update":"2026-02-27T04:53:17.626536+00:00","callsign":"VK3TPM","grid_square":"QF22ds","version":"FreeDV 2.3.0-dev-1e14","rx_only":false,"os":"linux","connect_time":"2026-02-27T04:53:17.626518+00:00"}]
+received: 42["bulk_update",[["new_connection",{"sid":"JwL2YYl-ky3GKb_nDLM-","last_update":"2026-02-27T04:50:53.760341+00:00","callsign":"KJ0CFW","grid_square":"DM78pr","version":"FreeDV 2.2.1","rx_only":false,"os":"windows","connect_time":"2026-02-24T18:36:32.714673+00:00"}],
