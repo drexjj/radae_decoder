@@ -32,3 +32,4 @@ void on_open_file(GtkMenuItem* item, gpointer parent_window);
 void on_quit(GtkMenuItem* item, gpointer app);
 void on_settings(GtkMenuItem* item, gpointer data);
 void on_rig_control(GtkMenuItem* item, gpointer data);
+void on_reporter(GtkMenuItem* item, gpointer data);

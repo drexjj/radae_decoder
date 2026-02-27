@@ -428,3 +428,9 @@ void on_rig_control(GtkMenuItem* /*item*/, gpointer /*data*/)
     if (g_rig_dlg)
         gtk_widget_show_all(g_rig_dlg);
 }
+
+/* Edit > Reporter */
+void on_reporter(GtkMenuItem* /*item*/, gpointer /*data*/)
+{
+    gtk_show_uri_on_window(nullptr, "https://qso.freedv.org", GDK_CURRENT_TIME, nullptr);
+}

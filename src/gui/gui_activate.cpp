@@ -109,6 +109,10 @@ void activate(GtkApplication* app, gpointer /*data*/)
     g_signal_connect(rig_mi, "activate", G_CALLBACK(on_rig_control), nullptr);
     gtk_menu_shell_append(GTK_MENU_SHELL(edit_menu), rig_mi);
 
+    GtkWidget* reporter_mi = gtk_menu_item_new_with_label("Reporter");
+    g_signal_connect(reporter_mi, "activate", G_CALLBACK(on_reporter), nullptr);
+    gtk_menu_shell_append(GTK_MENU_SHELL(edit_menu), reporter_mi);
+
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(edit_mi), edit_menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), edit_mi);
 
