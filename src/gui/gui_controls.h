@@ -19,8 +19,9 @@ uint64_t rig_freq_hz();
 /* Reporter */
 void reporter_restart();
 
-/* Decoder / encoder lifecycle */
+/* Decoder / encoder / passthrough lifecycle */
 void stop_all();
 void start_decoder(int in_idx, int out_idx);
 void start_encoder(int mic_idx, int radio_idx);
 void start_decoder_file(const std::string& wav_path, int out_idx);
+void start_passthrough(int in_idx, int out_idx);

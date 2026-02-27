@@ -22,6 +22,7 @@ gboolean on_bpf_switch_changed(GtkSwitch* sw, gboolean state, gpointer data);
 /* Buttons */
 void on_record_clicked(GtkButton* btn, gpointer data);
 void on_start_stop(GtkButton* btn, gpointer data);
+void on_analog_clicked(GtkButton* btn, gpointer data);
 void on_refresh(GtkButton* btn, gpointer data);
 
 /* Window lifecycle */

@@ -299,6 +299,35 @@ void on_start_stop(GtkButton* /*btn*/, gpointer /*data*/)
     }
 }
 
+/* analog passthrough toggle */
+void on_analog_clicked(GtkButton* btn, gpointer /*data*/)
+{
+    if (!g_analog_active) {
+        /* ── switch to analog passthrough ── */
+        int in_idx  = gtk_combo_box_get_active(GTK_COMBO_BOX(g_input_combo));
+        int out_idx = gtk_combo_box_get_active(GTK_COMBO_BOX(g_output_combo));
+        if (in_idx < 0 || out_idx < 0) {
+            set_status("Select both input and output devices first.");
+            return;
+        }
+        g_analog_active = true;
+        gtk_button_set_label(btn, " Digital ");
+        gtk_widget_set_tooltip_text(GTK_WIDGET(btn), "Switch back to RADE digital decoding");
+        start_passthrough(in_idx, out_idx);
+    } else {
+        /* ── switch back to digital decode ── */
+        g_analog_active = false;
+        gtk_button_set_label(btn, " Analog ");
+        gtk_widget_set_tooltip_text(GTK_WIDGET(btn), "Switch to analog passthrough (no decoding)");
+        int in_idx  = gtk_combo_box_get_active(GTK_COMBO_BOX(g_input_combo));
+        int out_idx = gtk_combo_box_get_active(GTK_COMBO_BOX(g_output_combo));
+        if (in_idx >= 0 && out_idx >= 0)
+            start_decoder(in_idx, out_idx);
+        else
+            stop_all();
+    }
+}
+
 /* refresh the device lists */
 void on_refresh(GtkButton* /*btn*/, gpointer /*data*/)
 {

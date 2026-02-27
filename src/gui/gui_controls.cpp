@@ -115,8 +115,9 @@ void stop_all()
     fprintf(stderr, "stop_all()\n");
     /* Stop threads first so the EOO frame is flushed into the recorder,
        then detach the recorder once the threads have finished. */
-    if (g_decoder) { g_decoder->stop(); g_decoder->close(); }
-    if (g_encoder) { g_encoder->stop(); g_encoder->close(); }
+    if (g_decoder)    { g_decoder->stop();    g_decoder->close();    }
+    if (g_encoder)    { g_encoder->stop();    g_encoder->close();    }
+    if (g_passthrough){ g_passthrough->stop(); g_passthrough->close(); }
 
     if (g_decoder) g_decoder->set_recorder(nullptr);
     if (g_encoder) g_encoder->set_recorder(nullptr);
@@ -211,4 +212,23 @@ void start_decoder_file(const std::string& wav_path, int out_idx)
     set_btn_state(true);
     set_status("Playing file\xe2\x80\xa6");
     g_timer = g_timeout_add(33, on_meter_tick, nullptr);
+}
+
+void start_passthrough(int in_idx, int out_idx)
+{
+    if (in_idx  < 0 || in_idx  >= static_cast<int>(g_input_devices.size()))  return;
+    if (out_idx < 0 || out_idx >= static_cast<int>(g_output_devices.size())) return;
+
+    stop_all();
+
+    if (!g_passthrough) g_passthrough = new AudioPassthrough();
+
+    if (!g_passthrough->open(g_input_devices[static_cast<size_t>(in_idx)].hw_id,
+                              g_output_devices[static_cast<size_t>(out_idx)].hw_id)) {
+        set_status("Failed to open audio devices for passthrough.");
+        return;
+    }
+
+    g_passthrough->start();
+    set_status("Analog passthrough active.");
 }

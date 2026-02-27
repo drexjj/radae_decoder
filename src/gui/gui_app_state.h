@@ -8,6 +8,7 @@
 #include "../src/audio/audio_input.h"
 #include "../src/radae_top/rade_decoder.h"
 #include "../src/radae_top/rade_encoder.h"
+#include "../src/radae_top/audio_passthrough.h"
 #include "../src/wav/wav_recorder.h"
 #include "../network/freedv_reporter.h"
 
@@ -15,6 +16,7 @@
 
 extern RadaeDecoder*            g_decoder;
 extern RadaeEncoder*            g_encoder;
+extern AudioPassthrough*        g_passthrough;
 extern GtkWidget*               g_tx_switch;       // TX mode toggle
 extern GtkWidget*               g_bpf_switch;      // TX BPF toggle
 extern std::vector<AudioDevice> g_input_devices;
@@ -27,6 +29,8 @@ extern GtkWidget*               g_tx_input_combo;  // transmit mic input selecto
 extern GtkWidget*               g_tx_output_combo; // transmit radio output selector
 extern GtkWidget*               g_btn;             // start / stop
 extern GtkWidget*               g_record_btn;      // record / stop-record
+extern GtkWidget*               g_analog_btn;      // analog passthrough toggle
+extern bool                     g_analog_active;   // true while in analog passthrough mode
 extern WavRecorder*             g_recorder;        // active WAV recorder
 extern bool                     g_recording;       // recording in progress
 extern GtkWidget*               g_meter_in;        // input level meter

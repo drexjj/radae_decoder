@@ -322,6 +322,11 @@ void activate(GtkApplication* app, gpointer /*data*/)
     g_signal_connect(g_record_btn, "clicked", G_CALLBACK(on_record_clicked), NULL);
     gtk_box_pack_start(GTK_BOX(btn_hbox), g_record_btn, FALSE, FALSE, 0);
 
+    g_analog_btn = gtk_button_new_with_label(" Analog ");
+    gtk_widget_set_tooltip_text(g_analog_btn, "Switch to analog passthrough (no decoding)");
+    g_signal_connect(g_analog_btn, "clicked", G_CALLBACK(on_analog_clicked), NULL);
+    gtk_box_pack_start(GTK_BOX(btn_hbox), g_analog_btn, FALSE, FALSE, 0);
+
     GtkWidget* tx_label = gtk_label_new("TX");
     gtk_box_pack_start(GTK_BOX(btn_hbox), tx_label, FALSE, FALSE, 0);
 

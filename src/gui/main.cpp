@@ -6,6 +6,7 @@
 
 RadaeDecoder*            g_decoder            = nullptr;
 RadaeEncoder*            g_encoder            = nullptr;
+AudioPassthrough*        g_passthrough        = nullptr;
 GtkWidget*               g_tx_switch          = nullptr;   // TX mode toggle
 GtkWidget*               g_bpf_switch         = nullptr;   // TX BPF toggle
 std::vector<AudioDevice> g_input_devices;
@@ -18,6 +19,8 @@ GtkWidget*               g_tx_input_combo     = nullptr;   // transmit mic input
 GtkWidget*               g_tx_output_combo    = nullptr;   // transmit radio output selector
 GtkWidget*               g_btn                = nullptr;   // start / stop
 GtkWidget*               g_record_btn         = nullptr;   // record / stop-record
+GtkWidget*               g_analog_btn         = nullptr;   // analog passthrough toggle
+bool                     g_analog_active      = false;     // true while in analog passthrough mode
 WavRecorder*             g_recorder           = nullptr;   // active WAV recorder
 bool                     g_recording          = false;     // recording in progress
 GtkWidget*               g_meter_in           = nullptr;   // input level meter

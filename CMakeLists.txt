@@ -163,6 +163,7 @@ add_executable(RADAE_Gui
     src/gui/meter_widget.cpp
     src/radae_top/rade_decoder.cpp
     src/radae_top/rade_encoder.cpp
+    src/radae_top/audio_passthrough.cpp
     src/eoo/EooCallsignCodec.cpp
     src/gui/rig_control.cpp
     src/gui/spectrum_widget.cpp
