@@ -107,7 +107,7 @@ public:
                             const std::string& gridSquare = "",
                             const std::string& version    = "RADAE v1.0",
                             bool               rxOnly     = false,
-                            bool               writeOnly  = false,
+                            bool               writeOnly  = true, // TODO change to receive station updates
                             const std::string& host       = "qso.freedv.org",
                             int                port       = 80);
     ~FreeDVReporter() override;
