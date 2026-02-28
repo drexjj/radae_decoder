@@ -101,6 +101,14 @@ void reporter_restart()
     g_reporter = new FreeDVReporter(cs ? cs : "", gs ? gs : "", "RADAEV1c"); // "FreeDV 2.2.1"
     g_reporter->connect();
 
+    /* Re-send the saved free-text message so the reporter shows it immediately
+       after (re)connecting, without the user having to press Send again. */
+    if (g_message_entry) {
+        const char* msg = gtk_entry_get_text(GTK_ENTRY(g_message_entry));
+        if (msg && msg[0] != '\0')
+            g_reporter->updateMessage(msg);
+    }
+
     g_last_rx_callsign.clear();
     g_last_reporter_freq = 0;
 }

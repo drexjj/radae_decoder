@@ -8,6 +8,7 @@
 #include "rig_control.h"
 
 #include <algorithm>   // std::clamp
+#include <chrono>
 #include <cstdio>
 
 /* ── timer callback: update meters + status at ~30 fps ─────────────────── */
@@ -71,12 +72,31 @@ gboolean on_meter_tick(gpointer /*data*/)
     if (!g_decoder) return TRUE;
     std::string cs = g_decoder->last_callsign();
 
-    /* Report newly decoded callsigns to FreeDV Reporter. */
-    if (g_reporter && !cs.empty() && cs != g_last_rx_callsign) {
-        g_last_rx_callsign = cs;
-        const signed char snr = static_cast<signed char>(
-            std::clamp(g_decoder->snr_dB(), -128.0f, 127.0f));
-        g_reporter->addReceiveRecord(cs, "RADAEV1c", rig_freq_hz(), snr);
+    /* Report to FreeDV Reporter:
+       - immediately on a new/changed callsign
+       - periodically (every 1 s) while synced, even with no callsign change */
+    static auto s_last_rx_report =
+        std::chrono::steady_clock::now() - std::chrono::seconds(1);
+
+    const bool synced = g_decoder->is_synced();
+
+    if (g_reporter && synced) {
+        bool new_cs      = (!cs.empty() && cs != g_last_rx_callsign);
+        auto now         = std::chrono::steady_clock::now();
+        bool periodic    = (now - s_last_rx_report) >= std::chrono::seconds(10);
+
+        if (new_cs || periodic) {
+            if (new_cs) g_last_rx_callsign = cs;
+            const signed char snr = static_cast<signed char>(
+                std::clamp(g_decoder->snr_dB(), -128.0f, 127.0f));
+            g_reporter->addReceiveRecord(g_last_rx_callsign, "RADAEV1c",
+                                         rig_freq_hz(), snr);
+            s_last_rx_report = now;
+        }
+    } else if (!synced) {
+        /* Reset timer so the first report after re-sync fires immediately. */
+        s_last_rx_report =
+            std::chrono::steady_clock::now() - std::chrono::seconds(10);
     }
 
     char buf[256];
@@ -108,7 +128,7 @@ gboolean on_meter_tick(gpointer /*data*/)
     }
 
     /* update status with sync info */
-    if (g_decoder->is_synced()) {
+    if (synced) {
         if (cs.empty()) {
             std::snprintf(buf, sizeof buf,
                           "Synced \xe2\x80\x94 SNR: %.0f dB  Freq: %+.1f Hz",
