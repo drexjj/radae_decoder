@@ -19,7 +19,7 @@ void set_status(const char* msg)
 /* change the button label AND its CSS class in one shot */
 void set_btn_state(bool capturing)
 {
-    GtkStyleContext* ctx = gtk_widget_get_style_context(g_btn);
+    //GtkStyleContext* ctx = gtk_widget_get_style_context(g_btn);
     if (capturing) {
         //gtk_style_context_remove_class(ctx, "start-btn");
         //gtk_style_context_add_class   (ctx, "stop-btn");
