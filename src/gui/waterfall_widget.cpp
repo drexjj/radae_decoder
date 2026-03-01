@@ -10,7 +10,7 @@ static constexpr const char* STATE_KEY = "waterfall-state";
 static constexpr float       DB_MIN    = -80.f;
 static constexpr float       DB_MAX    =   0.f;
 static constexpr int         N_BINS    = 256;
-static constexpr int         N_ROWS    = 200;
+static constexpr int         N_ROWS    = 400;
 
 struct WaterfallState {
     std::vector<uint32_t> pixels;                // N_BINS * N_ROWS, ARGB32
