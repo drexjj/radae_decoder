@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+BUILDDIR = debian/build-$(DEB_HOST_GNU_TYPE)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	mkdir -p $(BUILDDIR)
+	cd $(BUILDDIR) && cmake $(CURDIR) \
+		-DAUDIO_BACKEND=PULSE \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE=ON
+
+override_dh_auto_build:
+	$(MAKE) -C $(BUILDDIR) webrx_rade_decode -j$(shell nproc)
+
+override_dh_auto_test:
+	# No automated tests.
+
+override_dh_auto_install:
+	install -D -m 0755 $(BUILDDIR)/tools/webrx_rade_decode \
+		debian/webrx-rade-decode/usr/bin/webrx_rade_decode
+
+override_dh_auto_clean:
+	rm -rf $(BUILDDIR)
