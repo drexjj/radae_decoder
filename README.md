@@ -173,6 +173,44 @@ export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
 cmake ..
 ```
 
+## Debian Package for webrx_rade_decode
+
+`webrx_rade_decode` can be packaged as a self-contained Debian `.deb` for easy installation on Debian/Ubuntu systems. All dependencies (Opus, RADE library, neural network weights) are statically linked into the binary, so the only runtime requirement is `libc6`.
+
+### Quick build
+
+```bash
+# Install build dependencies
+sudo apt-get install build-essential cmake autoconf automake libtool pkg-config \
+    libgtk-3-dev libhamlib-dev libpulse-dev
+
+# Build and package  (downloads Opus from GitHub on first run; cached afterwards)
+./package-deb.sh
+
+# Install
+sudo dpkg -i webrx-rade-decode_0.1.0-1_amd64.deb
+```
+
+### Skip rebuild
+
+If `build/tools/webrx_rade_decode` already exists from a previous cmake build:
+
+```bash
+./package-deb.sh --skip-build
+```
+
+### Using dpkg-buildpackage
+
+A `debian/` directory is provided for use with standard Debian tooling:
+
+```bash
+dpkg-buildpackage -us -uc -b
+```
+
+> **Note:** the build fetches Opus source from GitHub the first time it runs. This requires
+> internet access during the configure step, which is non-standard for Debian policy. Use
+> `package-deb.sh` for straightforward local builds.
+
 ## Usage
 
 ```bash
