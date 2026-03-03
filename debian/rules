@@ -6,14 +6,14 @@ DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 BUILDDIR = debian/build-$(DEB_HOST_GNU_TYPE)
 IS_MINIMAL = $(filter pkg.minimal,$(DEB_BUILD_PROFILES))
 
-CLI_TOOLS = lpcnet_demo radae_tx radae_rx real2iq rade_demod rade_modulate webrx_rade_decode radae_headless
+CLI_TOOLS = webrx_rade_decode radae_headless
 
 ifneq ($(IS_MINIMAL),)
 BUILD_TARGETS = $(CLI_TOOLS)
 INSTALL_PACKAGE = webrx-rade-decode-minimal
 MODE_LABEL = minimal CLI-tools
 else
-BUILD_TARGETS = $(CLI_TOOLS) RADAE_Gui
+BUILD_TARGETS = $(CLI_TOOLS) RADAE_Gui lpcnet_demo radae_tx radae_rx real2iq rade_demod rade_modulate 
 INSTALL_PACKAGE = webrx-rade-decode
 MODE_LABEL = full
 endif
