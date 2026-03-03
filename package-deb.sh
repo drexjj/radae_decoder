@@ -16,6 +16,10 @@
 #       cmake (>= 3.16), gcc, autoconf, automake, libtool, pkg-config,
 #       libgtk-3-dev, libhamlib-dev, libpulse-dev
 #   - Runtime dependency: libc6 only (all other libs are statically linked).
+#
+#   Alternately you can, from the top directory do:
+#   dpkg-buildpackage -us -uc -b -Ppkg.minimal
+#   dpkg-buildpackage -us -uc -b # to do all the binaries
 
 set -euo pipefail
 

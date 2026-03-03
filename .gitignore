@@ -6,11 +6,4 @@ build-macos/
 .claude/
 .vscode/
 .vscode/c_cpp_properties.json
-debian/.*
-debian/build*
-debian/webrx-rade-decode/
-debian/webrx-rade-decode-minimal/
-debian/debhelper-build-stamp
-debian/files
-debian/webrx-rade-decode-minimal.substvars
 webrx-rade-decode_0.1.0-1_amd64/
