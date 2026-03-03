@@ -213,7 +213,11 @@ If `build/tools/webrx_rade_decode` already exists from a previous cmake build:
 A `debian/` directory is provided for use with standard Debian tooling:
 
 ```bash
+# Full package (default behavior): CLI and GUI
 dpkg-buildpackage -us -uc -b
+
+# Minimal package (CLI tools only): webrx-rade-decode-minimal
+dpkg-buildpackage -us -uc -b -Ppkg.minimal
 ```
 
 > **Note:** the build fetches Opus source from GitHub the first time it runs. This requires
