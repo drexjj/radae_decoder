@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     int n_features_out = rade_n_features_in_out(r);
     int n_eoo_bits     = rade_n_eoo_bits(r);
 
-    if (verbose >= 1)
+    if (verbose >= 2)
         fprintf(stderr, "nin_max: %d  n_features_out: %d  n_eoo_bits: %d\n",
                 nin_max, n_features_out, n_eoo_bits);
 

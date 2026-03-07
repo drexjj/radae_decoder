@@ -109,8 +109,8 @@ int main(int argc, char *argv[]) {
     int n_features_out = rade_n_features_in_out(r);
     int n_eoo_bits = rade_n_eoo_bits(r);
 
-    fprintf(stderr, "nin_max: %d n_features_out: %d n_eoo_bits: %d\n",
-            nin_max, n_features_out, n_eoo_bits);
+    // fprintf(stderr, "nin_max: %d n_features_out: %d n_eoo_bits: %d\n",
+    //         nin_max, n_features_out, n_eoo_bits);
 
     /* Allocate buffers */
     RADE_COMP *rx_in = (RADE_COMP *)malloc(sizeof(RADE_COMP) * nin_max);
