@@ -206,11 +206,16 @@ int main(int argc, char *argv[]) {
             cont_frames  = 0;
         }
         was_synced = synced;
-        if(synced) {
-            fprintf(stderr, "Status:Sync\n");
-        } else {
-            fprintf(stderr, "Status:Searching\n");
+        
+        if (mf_count % 20 == 0) {
+            if(synced) {
+                fprintf(stderr, "Status=Sync,SNR=%ddB,FreqOffset=%.1f Hz\n",
+                    rade_snrdB_3k_est(r), rade_freq_offset(r));
+            } else {
+                fprintf(stderr, "Status=Searching\n");
+            }
         }
+        
 
         if (n_out > 0) {
             vld_count++;

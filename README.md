@@ -521,9 +521,34 @@ options:
 
 Test:
 ```
-sox FDV_FromRadio_20260125-080557_local.wav \
+sox FDV_offair.wav \
 -t raw -b 16 -r 8000 -e signed-integer - | \
 ./webrx_rade_decode |sox -t raw -r 8000 -b 16 -e signed-integer -c 1 - output.wav
+```
+
+Prints information to stderr for OpenWebRx+ to display to the user like this:
+```
+Status=Searching
+Status=Sync,SNR=20dB,FreqOffset=1.0 Hz
+Status=End-of-over at modem frame 38
+Status=Searching
+Status=Sync,SNR=22dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=34dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=35dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=35dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=35dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=35dB,FreqOffset=0.0 Hz
+Status=Sync,SNR=36dB,FreqOffset=0.0 Hz
+Status=End-of-over at modem frame 334
+Status=Searching
+Status=Sync,SNR=20dB,FreqOffset=1.0 Hz
 ```
 
 ## Source files
