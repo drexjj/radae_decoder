@@ -94,6 +94,7 @@ if(BUILD_GUI)
 endif()
 
 # ── Opus (with FARGAN/LPCNet support) ────────────────────────────────────────
+option(AVX "Enable AVX CPU optimizations." ON)
 include(cmake/BuildOpus.cmake)
 
 # ── RADE library (Python-free) ───────────────────────────────────────────────
