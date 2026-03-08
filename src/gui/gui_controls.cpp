@@ -6,6 +6,8 @@
 #include "waterfall_widget.h"
 #include "rig_control.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <map>
@@ -103,13 +105,35 @@ void refresh_reporter_list()
     for (const auto& s : g_reporter->getStations())
         s_seen_stations[s.sid] = s;
 
-    // Rebuild the list store from the accumulator.
-    // GtkListStore defers redraws until the view is next idle, so a
-    // clear+repopulate is visually equivalent to an in-place upsert.
+    // Read filter text (upper-cased for case-insensitive match).
+    std::string filter;
+    if (g_reporter_filter) {
+        const char* txt = gtk_entry_get_text(GTK_ENTRY(g_reporter_filter));
+        if (txt) {
+            filter = txt;
+            for (char& c : filter)
+                c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        }
+    }
+
+    auto ci_contains = [](const std::string& hay, const std::string& needle) {
+        return std::search(hay.begin(), hay.end(),
+                           needle.begin(), needle.end(),
+                           [](char a, char b) {
+                               return std::toupper(static_cast<unsigned char>(a))
+                                   == std::toupper(static_cast<unsigned char>(b));
+                           }) != hay.end();
+    };
+
+    // Rebuild the list store from the accumulator (filtered).
     gtk_list_store_clear(store);
+    int count = 0;
 
     for (const auto& kv : s_seen_stations) {
         const StationInfo& s = kv.second;
+
+        if (!filter.empty() && !ci_contains(s.callsign, filter))
+            continue;
 
         char freq_buf[32];
         if (s.frequency > 0)
@@ -135,6 +159,14 @@ void refresh_reporter_list()
             7, s.message.c_str(),
             8, s.sid.c_str(),
             -1);
+        ++count;
+    }
+
+    // Update the station count label.
+    if (g_reporter_count_lbl) {
+        char buf[32];
+        std::snprintf(buf, sizeof buf, "%d station%s", count, count == 1 ? "" : "s");
+        gtk_label_set_text(GTK_LABEL(g_reporter_count_lbl), buf);
     }
 }
 

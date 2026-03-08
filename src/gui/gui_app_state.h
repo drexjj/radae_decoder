@@ -54,3 +54,5 @@ extern uint64_t                 g_last_reporter_freq; // last frequency sent to 
 extern GtkWidget*               g_message_entry;      // reporter free-text message
 extern GtkWidget*               g_reporter_win;       // FreeDV Reporter station-list window
 extern GtkWidget*               g_reporter_view;      // GtkTreeView inside reporter window
+extern GtkWidget*               g_reporter_filter;    // callsign filter entry
+extern GtkWidget*               g_reporter_count_lbl; // "N stations" label

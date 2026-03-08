@@ -37,3 +37,6 @@ void on_reporter(GtkMenuItem* item, gpointer data);
 
 /* Reporter message */
 void on_send_message(GtkButton* btn, gpointer data);
+
+/* Reporter filter */
+void on_reporter_filter_changed(GtkEditable* e, gpointer data);

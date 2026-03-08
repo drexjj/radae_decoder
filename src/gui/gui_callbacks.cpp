@@ -503,6 +503,12 @@ void on_reporter(GtkMenuItem* /*item*/, gpointer /*data*/)
         gtk_widget_show_all(g_reporter_win);
 }
 
+/* Reporter callsign filter changed */
+void on_reporter_filter_changed(GtkEditable* /*e*/, gpointer /*data*/)
+{
+    refresh_reporter_list();
+}
+
 /* Send reporter message */
 void on_send_message(GtkButton* /*btn*/, gpointer /*data*/)
 {

@@ -131,6 +131,32 @@ void activate(GtkApplication* app, gpointer /*data*/)
                      G_CALLBACK(gtk_widget_hide_on_delete), nullptr);
 
     {
+        GtkWidget* rep_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+        gtk_container_set_border_width(GTK_CONTAINER(rep_vbox), 6);
+        gtk_container_add(GTK_CONTAINER(g_reporter_win), rep_vbox);
+
+        /* ── filter row ─────────────────────────────────────────────── */
+        GtkWidget* filter_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+
+        gtk_box_pack_start(GTK_BOX(filter_hbox),
+                           gtk_label_new("Filter:"), FALSE, FALSE, 0);
+
+        g_reporter_filter = gtk_entry_new();
+        gtk_entry_set_placeholder_text(GTK_ENTRY(g_reporter_filter),
+                                       "callsign substring…");
+        gtk_widget_set_tooltip_text(g_reporter_filter,
+                                    "Show only stations whose callsign contains this text");
+        g_signal_connect(g_reporter_filter, "changed",
+                         G_CALLBACK(on_reporter_filter_changed), nullptr);
+        gtk_box_pack_start(GTK_BOX(filter_hbox), g_reporter_filter, TRUE, TRUE, 0);
+
+        g_reporter_count_lbl = gtk_label_new("0 stations");
+        gtk_label_set_xalign(GTK_LABEL(g_reporter_count_lbl), 1.0);
+        gtk_box_pack_end(GTK_BOX(filter_hbox), g_reporter_count_lbl, FALSE, FALSE, 0);
+
+        gtk_box_pack_start(GTK_BOX(rep_vbox), filter_hbox, FALSE, FALSE, 0);
+
+        /* ── tree view ──────────────────────────────────────────────── */
         // Columns 0-7: Callsign, Grid, Frequency, Mode, TX, RX'd, SNR, Message
         // Column 8 (hidden): SID — used as the row key for incremental updates
         GtkListStore* store = gtk_list_store_new(9,
@@ -157,7 +183,7 @@ void activate(GtkApplication* app, gpointer /*data*/)
         gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw),
                                        GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
         gtk_container_add(GTK_CONTAINER(sw), g_reporter_view);
-        gtk_container_add(GTK_CONTAINER(g_reporter_win), sw);
+        gtk_box_pack_start(GTK_BOX(rep_vbox), sw, TRUE, TRUE, 0);
     }
 
     /* ── settings dialog (created hidden, shown from Edit > Settings) ── */
