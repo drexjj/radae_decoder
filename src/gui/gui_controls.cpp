@@ -84,9 +84,12 @@ uint64_t rig_freq_hz()
 
 /* ── reporter ───────────────────────────────────────────────────────────── */
 
-/* Upsert the station-list GtkTreeView from the current g_reporter data.
-   Existing rows are updated in place, departed stations are removed, and
-   new stations are appended — no full clear/repopulate flicker.
+/* Accumulates every station ever seen (keyed by SID) — never cleared.
+   Stations are only added or updated here, never removed, so the list
+   retains departed stations across reconnects. */
+static std::map<std::string, StationInfo> s_seen_stations;
+
+/* Rebuild the station-list GtkTreeView from s_seen_stations.
    Must be called from the GTK main thread. */
 void refresh_reporter_list()
 {
@@ -96,13 +99,18 @@ void refresh_reporter_list()
         gtk_tree_view_get_model(GTK_TREE_VIEW(g_reporter_view)));
     if (!store) return;
 
-    // Build a sid→StationInfo map of the current live stations.
-    std::map<std::string, StationInfo> current;
-    for (auto& s : g_reporter->getStations())
-        current[s.sid] = std::move(s);
+    // Merge the live station snapshot into the persistent accumulator.
+    for (const auto& s : g_reporter->getStations())
+        s_seen_stations[s.sid] = s;
 
-    // Helper: write one station's data into an existing or new row.
-    auto fill_row = [&](GtkTreeIter* it, const StationInfo& s) {
+    // Rebuild the list store from the accumulator.
+    // GtkListStore defers redraws until the view is next idle, so a
+    // clear+repopulate is visually equivalent to an in-place upsert.
+    gtk_list_store_clear(store);
+
+    for (const auto& kv : s_seen_stations) {
+        const StationInfo& s = kv.second;
+
         char freq_buf[32];
         if (s.frequency > 0)
             std::snprintf(freq_buf, sizeof freq_buf, "%.3f MHz",
@@ -111,10 +119,12 @@ void refresh_reporter_list()
             std::strcpy(freq_buf, "\xe2\x80\x94");   // —
 
         char snr_buf[16] = "";
-        if (!s.rx_callsign.empty())
+        if (!s.rx_last_update.empty())
             std::snprintf(snr_buf, sizeof snr_buf, "%.0f dB", s.rx_snr);
 
-        gtk_list_store_set(store, it,
+        GtkTreeIter iter;
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
             0, s.callsign.c_str(),
             1, s.grid_square.c_str(),
             2, freq_buf,
@@ -123,32 +133,8 @@ void refresh_reporter_list()
             5, s.rx_callsign.c_str(),
             6, snr_buf,
             7, s.message.c_str(),
-            8, s.sid.c_str(),          // hidden key column
+            8, s.sid.c_str(),
             -1);
-    };
-
-    // Walk existing rows: update matching stations, remove stale ones.
-    GtkTreeIter iter;
-    gboolean valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
-    while (valid) {
-        gchar* row_sid = nullptr;
-        gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, 8, &row_sid, -1);
-        std::string sid = row_sid ? row_sid : "";
-        g_free(row_sid);
-
-        auto it = current.find(sid);
-        if (it != current.end()) {
-            fill_row(&iter, it->second);
-            current.erase(it);
-        }
-        valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter);
-    }
-
-    // Append any stations not already in the list.
-    for (const auto& kv : current) {
-        GtkTreeIter new_iter;
-        gtk_list_store_append(store, &new_iter);
-        fill_row(&new_iter, kv.second);
     }
 }
 
