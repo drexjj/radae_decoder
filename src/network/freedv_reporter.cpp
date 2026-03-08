@@ -365,9 +365,12 @@ void FreeDVReporter::onFreqChange(const std::string& data)
     if (!doc) return;
     yyjson_val* root = yyjson_doc_get_root(doc);
 
-    const std::string sid  = jStr(root, "sid");
-    const uint64_t    freq = jUint(root, "freq");
-    const std::string upd  = jStr(root, "last_update");
+    const std::string sid      = jStr(root, "sid");
+    const uint64_t    freq     = jUint(root, "freq");
+    const std::string upd      = jStr(root, "last_update");
+    // Identity fields present in some server implementations
+    const std::string callsign = jStr(root, "callsign");
+    const std::string grid     = jStr(root, "grid_square");
 
     yyjson_doc_free(doc);
 
@@ -376,15 +379,21 @@ void FreeDVReporter::onFreqChange(const std::string& data)
     {
         std::lock_guard<std::mutex> lock(stationMutex_);
         auto it = stations_.find(sid);
-        if (it != stations_.end()) {
-            it->second.frequency   = freq;
-            it->second.last_update = upd;
-            // A frequency change implicitly clears the last RX fields.
-            it->second.rx_callsign   = "";
-            it->second.rx_mode       = "";
-            it->second.rx_snr        = 0.0;
-            it->second.rx_last_update = "";
+        if (it == stations_.end()) {
+            StationInfo info;
+            info.sid         = sid;
+            info.callsign    = callsign;
+            info.grid_square = grid;
+            stations_[sid]   = std::move(info);
+            it               = stations_.find(sid);
         }
+        it->second.frequency      = freq;
+        it->second.last_update    = upd;
+        // A frequency change implicitly clears the last RX fields.
+        it->second.rx_callsign    = "";
+        it->second.rx_mode        = "";
+        it->second.rx_snr         = 0.0;
+        it->second.rx_last_update = "";
     }
 
     if (!suppressUpdateCb_ && stationUpdateCb_) stationUpdateCb_();
@@ -398,11 +407,14 @@ void FreeDVReporter::onTxReport(const std::string& data)
     if (!doc) return;
     yyjson_val* root = yyjson_doc_get_root(doc);
 
-    const std::string sid    = jStr(root, "sid");
-    const std::string mode   = jStr(root, "mode");
-    const bool        txing  = jBool(root, "transmitting");
-    const std::string lastTx = jStr(root, "last_tx");
-    const std::string upd    = jStr(root, "last_update");
+    const std::string sid      = jStr(root, "sid");
+    const std::string mode     = jStr(root, "mode");
+    const bool        txing    = jBool(root, "transmitting");
+    const std::string lastTx   = jStr(root, "last_tx");
+    const std::string upd      = jStr(root, "last_update");
+    // Identity fields present in some server implementations
+    const std::string callsign = jStr(root, "callsign");
+    const std::string grid     = jStr(root, "grid_square");
 
     yyjson_doc_free(doc);
 
@@ -411,12 +423,18 @@ void FreeDVReporter::onTxReport(const std::string& data)
     {
         std::lock_guard<std::mutex> lock(stationMutex_);
         auto it = stations_.find(sid);
-        if (it != stations_.end()) {
-            it->second.mode         = mode;
-            it->second.transmitting = txing;
-            it->second.last_tx      = lastTx;
-            it->second.last_update  = upd;
+        if (it == stations_.end()) {
+            StationInfo info;
+            info.sid         = sid;
+            info.callsign    = callsign;
+            info.grid_square = grid;
+            stations_[sid]   = std::move(info);
+            it               = stations_.find(sid);
         }
+        it->second.mode         = mode;
+        it->second.transmitting = txing;
+        it->second.last_tx      = lastTx;
+        it->second.last_update  = upd;
     }
 
     if (!suppressUpdateCb_ && stationUpdateCb_) stationUpdateCb_();
@@ -430,11 +448,15 @@ void FreeDVReporter::onRxReport(const std::string& data)
     if (!doc) return;
     yyjson_val* root = yyjson_doc_get_root(doc);
 
-    const std::string sid    = jStr(root, "sid");
-    const std::string rxCall = jStr(root, "callsign");
-    const std::string rxMode = jStr(root, "mode");
-    const double      rxSnr  = jReal(root, "snr");
-    const std::string upd    = jStr(root, "last_update");
+    const std::string sid     = jStr(root, "sid");
+    const std::string rxCall  = jStr(root, "callsign");
+    const std::string rxMode  = jStr(root, "mode");
+    const double      rxSnr   = jReal(root, "snr");
+    const std::string upd     = jStr(root, "last_update");
+    // receiver_callsign / receiver_grid_square identify the station doing
+    // the receiving (its own callsign / grid, not the decoded signal).
+    const std::string rxrCall = jStr(root, "receiver_callsign");
+    const std::string rxrGrid = jStr(root, "receiver_grid_square");
 
     yyjson_doc_free(doc);
 
@@ -443,13 +465,24 @@ void FreeDVReporter::onRxReport(const std::string& data)
     {
         std::lock_guard<std::mutex> lock(stationMutex_);
         auto it = stations_.find(sid);
-        if (it != stations_.end()) {
-            it->second.rx_callsign   = rxCall;
-            it->second.rx_mode       = rxMode;
-            it->second.rx_snr        = rxSnr;
-            it->second.rx_last_update = upd;
-            it->second.last_update   = upd;
+        if (it == stations_.end()) {
+            StationInfo info;
+            info.sid         = sid;
+            info.callsign    = rxrCall;
+            info.grid_square = rxrGrid;
+            stations_[sid]   = std::move(info);
+            it               = stations_.find(sid);
         }
+        // Fill in identity if it was missing from new_connection.
+        if (it->second.callsign.empty() && !rxrCall.empty())
+            it->second.callsign = rxrCall;
+        if (it->second.grid_square.empty() && !rxrGrid.empty())
+            it->second.grid_square = rxrGrid;
+        it->second.rx_callsign    = rxCall;
+        it->second.rx_mode        = rxMode;
+        it->second.rx_snr         = rxSnr;
+        it->second.rx_last_update = upd;
+        it->second.last_update    = upd;
     }
 
     if (!suppressUpdateCb_ && stationUpdateCb_) stationUpdateCb_();

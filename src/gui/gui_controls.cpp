@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <map>
 
 /* ── helpers ────────────────────────────────────────────────────────────── */
 
@@ -83,6 +84,74 @@ uint64_t rig_freq_hz()
 
 /* ── reporter ───────────────────────────────────────────────────────────── */
 
+/* Upsert the station-list GtkTreeView from the current g_reporter data.
+   Existing rows are updated in place, departed stations are removed, and
+   new stations are appended — no full clear/repopulate flicker.
+   Must be called from the GTK main thread. */
+void refresh_reporter_list()
+{
+    if (!g_reporter_view || !g_reporter) return;
+
+    GtkListStore* store = GTK_LIST_STORE(
+        gtk_tree_view_get_model(GTK_TREE_VIEW(g_reporter_view)));
+    if (!store) return;
+
+    // Build a sid→StationInfo map of the current live stations.
+    std::map<std::string, StationInfo> current;
+    for (auto& s : g_reporter->getStations())
+        current[s.sid] = std::move(s);
+
+    // Helper: write one station's data into an existing or new row.
+    auto fill_row = [&](GtkTreeIter* it, const StationInfo& s) {
+        char freq_buf[32];
+        if (s.frequency > 0)
+            std::snprintf(freq_buf, sizeof freq_buf, "%.3f MHz",
+                          static_cast<double>(s.frequency) / 1e6);
+        else
+            std::strcpy(freq_buf, "\xe2\x80\x94");   // —
+
+        char snr_buf[16] = "";
+        if (!s.rx_callsign.empty())
+            std::snprintf(snr_buf, sizeof snr_buf, "%.0f dB", s.rx_snr);
+
+        gtk_list_store_set(store, it,
+            0, s.callsign.c_str(),
+            1, s.grid_square.c_str(),
+            2, freq_buf,
+            3, s.mode.c_str(),
+            4, s.transmitting ? "TX" : "",
+            5, s.rx_callsign.c_str(),
+            6, snr_buf,
+            7, s.message.c_str(),
+            8, s.sid.c_str(),          // hidden key column
+            -1);
+    };
+
+    // Walk existing rows: update matching stations, remove stale ones.
+    GtkTreeIter iter;
+    gboolean valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter);
+    while (valid) {
+        gchar* row_sid = nullptr;
+        gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, 8, &row_sid, -1);
+        std::string sid = row_sid ? row_sid : "";
+        g_free(row_sid);
+
+        auto it = current.find(sid);
+        if (it != current.end()) {
+            fill_row(&iter, it->second);
+            current.erase(it);
+        }
+        valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter);
+    }
+
+    // Append any stations not already in the list.
+    for (const auto& kv : current) {
+        GtkTreeIter new_iter;
+        gtk_list_store_append(store, &new_iter);
+        fill_row(&new_iter, kv.second);
+    }
+}
+
 /* (Re)create the FreeDV Reporter with the current callsign and grid square.
    Safe to call at any time; deletes and replaces any existing instance.
    Only called after the settings widgets exist (end of activate() or later). */
@@ -98,7 +167,18 @@ void reporter_restart()
     const char* gs = g_gridsquare_entry
                    ? gtk_entry_get_text(GTK_ENTRY(g_gridsquare_entry)) : "";
 
-    g_reporter = new FreeDVReporter(cs ? cs : "", gs ? gs : "", "RADAEV1c"); // "FreeDV 2.2.1"
+    // writeOnly=false so we receive station updates from the server.
+    g_reporter = new FreeDVReporter(cs ? cs : "", gs ? gs : "", "RADAEV1c",
+                                    /*rxOnly=*/false, /*writeOnly=*/false);
+
+    g_reporter->setStationUpdateCallback([]() {
+        // Called from the Socket.IO thread — marshal to the GTK main thread.
+        g_idle_add(+[](gpointer) -> gboolean {
+            refresh_reporter_list();
+            return G_SOURCE_REMOVE;
+        }, nullptr);
+    });
+
     g_reporter->connect();
 
     /* Re-send the saved free-text message so the reporter shows it immediately

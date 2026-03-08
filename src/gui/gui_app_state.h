@@ -52,3 +52,5 @@ extern FreeDVReporter*          g_reporter;        // FreeDV Reporter client
 extern std::string              g_last_rx_callsign;// last callsign sent to reporter
 extern uint64_t                 g_last_reporter_freq; // last frequency sent to reporter
 extern GtkWidget*               g_message_entry;      // reporter free-text message
+extern GtkWidget*               g_reporter_win;       // FreeDV Reporter station-list window
+extern GtkWidget*               g_reporter_view;      // GtkTreeView inside reporter window

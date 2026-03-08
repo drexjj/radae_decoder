@@ -18,6 +18,7 @@ uint64_t rig_freq_hz();
 
 /* Reporter */
 void reporter_restart();
+void refresh_reporter_list();
 
 /* Decoder / encoder / passthrough lifecycle */
 void stop_all();

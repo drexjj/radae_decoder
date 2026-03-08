@@ -496,10 +496,11 @@ void on_rig_control(GtkMenuItem* /*item*/, gpointer /*data*/)
         gtk_widget_show_all(g_rig_dlg);
 }
 
-/* Edit > Reporter */
+/* Edit > FreeDV Reporter */
 void on_reporter(GtkMenuItem* /*item*/, gpointer /*data*/)
 {
-    gtk_show_uri_on_window(nullptr, "https://qso.freedv.org", GDK_CURRENT_TIME, nullptr);
+    if (g_reporter_win)
+        gtk_widget_show_all(g_reporter_win);
 }
 
 /* Send reporter message */

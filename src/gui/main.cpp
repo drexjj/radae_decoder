@@ -42,6 +42,8 @@ FreeDVReporter*          g_reporter           = nullptr;   // FreeDV Reporter cl
 std::string              g_last_rx_callsign;               // last callsign sent to reporter
 uint64_t                 g_last_reporter_freq = 0;         // last frequency sent to reporter
 GtkWidget*               g_message_entry      = nullptr;   // reporter free-text message
+GtkWidget*               g_reporter_win       = nullptr;   // FreeDV Reporter station-list window
+GtkWidget*               g_reporter_view      = nullptr;   // GtkTreeView inside reporter window
 
 /* ── entry point ────────────────────────────────────────────────────────── */
 

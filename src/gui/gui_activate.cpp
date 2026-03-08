@@ -109,7 +109,7 @@ void activate(GtkApplication* app, gpointer /*data*/)
     g_signal_connect(rig_mi, "activate", G_CALLBACK(on_rig_control), nullptr);
     gtk_menu_shell_append(GTK_MENU_SHELL(edit_menu), rig_mi);
 
-    GtkWidget* reporter_mi = gtk_menu_item_new_with_label("Reporter");
+    GtkWidget* reporter_mi = gtk_menu_item_new_with_label("FreeDV Reporter\xe2\x80\xa6");
     g_signal_connect(reporter_mi, "activate", G_CALLBACK(on_reporter), nullptr);
     gtk_menu_shell_append(GTK_MENU_SHELL(edit_menu), reporter_mi);
 
@@ -121,6 +121,44 @@ void activate(GtkApplication* app, gpointer /*data*/)
     /* ── rig control dialog (created hidden, shown from Edit > Rig Control) ── */
     g_rig_dlg = rig_control_create_dialog(window);
     rig_control_set_save_callback(save_config);
+
+    /* ── FreeDV Reporter station-list window (created hidden) ─────────────── */
+    g_reporter_win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(g_reporter_win), "FreeDV Reporter – Stations");
+    gtk_window_set_default_size(GTK_WINDOW(g_reporter_win), 720, 340);
+    gtk_window_set_transient_for(GTK_WINDOW(g_reporter_win), GTK_WINDOW(window));
+    g_signal_connect(g_reporter_win, "delete-event",
+                     G_CALLBACK(gtk_widget_hide_on_delete), nullptr);
+
+    {
+        // Columns 0-7: Callsign, Grid, Frequency, Mode, TX, RX'd, SNR, Message
+        // Column 8 (hidden): SID — used as the row key for incremental updates
+        GtkListStore* store = gtk_list_store_new(9,
+            G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
+            G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
+            G_TYPE_STRING);
+
+        g_reporter_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+        g_object_unref(store);
+
+        const char* col_titles[] = {
+            "Callsign", "Grid", "Frequency", "Mode",
+            "TX", "RX'd", "SNR", "Message"
+        };
+        for (int i = 0; i < 8; ++i) {
+            GtkCellRenderer*   r   = gtk_cell_renderer_text_new();
+            GtkTreeViewColumn* col = gtk_tree_view_column_new_with_attributes(
+                col_titles[i], r, "text", i, nullptr);
+            gtk_tree_view_column_set_resizable(col, TRUE);
+            gtk_tree_view_append_column(GTK_TREE_VIEW(g_reporter_view), col);
+        }
+
+        GtkWidget* sw = gtk_scrolled_window_new(nullptr, nullptr);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw),
+                                       GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+        gtk_container_add(GTK_CONTAINER(sw), g_reporter_view);
+        gtk_container_add(GTK_CONTAINER(g_reporter_win), sw);
+    }
 
     /* ── settings dialog (created hidden, shown from Edit > Settings) ── */
     g_settings_dlg = gtk_dialog_new_with_buttons(
