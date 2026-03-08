@@ -54,10 +54,8 @@ void rade_bpf_init(rade_bpf *bpf, int ntap, float Fs_Hz, float bandwidth_Hz,
        Bandwidth B = bandwidth_Hz / Fs_Hz (normalized)
        h[n] = B * sinc(n * B) where n is centered at (ntap-1)/2 */
     float B = bandwidth_Hz / Fs_Hz;
-    int centre = (ntap - 1) / 2;
-
     for (int i = 0; i < ntap; i++) {
-        float n = (float)(i - centre);
+        int n = i - (ntap - 1)/2;
         bpf->h[i] = B * rade_sinc(n * B);
     }
 
@@ -90,30 +88,25 @@ void rade_bpf_process(rade_bpf *bpf, RADE_COMP *y, const RADE_COMP *x, int n) {
     /* Process each sample */
     for (int i = 0; i < n; i++) {
         /* Mix down to baseband: x_bb = x * exp(-j*alpha*(i+1)) */
-        phase = rade_cmul(phase, phase_inc);
+        phase = rade_cmul(bpf->phase, rade_cexp(-bpf->alpha*(i+1)));
         RADE_COMP x_bb = rade_cmul(x[i], phase);
 
         /* Shift filter memory and add new sample */
-        for (int j = ntap - 1; j > 0; j--) {
-            bpf->mem[j] = bpf->mem[j - 1];
-        }
+        memmove(&bpf->mem[1], &bpf->mem[0], sizeof(RADE_COMP) * (ntap - 1));
         bpf->mem[0] = x_bb;
 
         /* FIR filter: y_bb = sum(h[k] * mem[k])
            Since h is real and symmetric, we can optimize but keep simple for now */
-        RADE_COMP y_bb = rade_czero();
-        for (int k = 0; k < ntap; k++) {
-            y_bb.real += bpf->h[k] * bpf->mem[k].real;
-            y_bb.imag += bpf->h[k] * bpf->mem[k].imag;
-        }
-
+        RADE_COMP y_bb = rade_cdot_float(bpf->mem, bpf->h, ntap);
+        
         /* Mix back up to centre frequency: y = y_bb * conj(phase) */
-        y[i] = rade_cmul(y_bb, rade_cconj(phase));
+        RADE_COMP cconj_phase = rade_cconj(phase);
+        y[i] = rade_cmul(y_bb, cconj_phase);
     }
 
     /* Save phase state for next call
        Normalize to prevent drift */
     float phase_mag = rade_cabs(phase);
-    bpf->phase.real = phase.real / phase_mag;
-    bpf->phase.imag = phase.imag / phase_mag;
+    bpf->phase.real = phase.real; // / phase_mag;
+    bpf->phase.imag = phase.imag; // / phase_mag;
 }

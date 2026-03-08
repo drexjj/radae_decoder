@@ -71,7 +71,7 @@ void rade_ofdm_init(rade_ofdm *ofdm, int bottleneck) {
     for (int c = 0; c < Nc; c++) {
         for (int n = 0; n < M; n++) {
             float theta = ofdm->w[c] * n;
-            ofdm->Winv[c][n] = rade_cscale(rade_cexp(theta), 1.0f / M);
+            ofdm->Winv[n][c] = rade_cscale(rade_cexp(theta), 1.0f / M);
         }
     }
 
@@ -80,7 +80,7 @@ void rade_ofdm_init(rade_ofdm *ofdm, int bottleneck) {
     for (int n = 0; n < M; n++) {
         for (int c = 0; c < Nc; c++) {
             float theta = -ofdm->w[c] * n;
-            ofdm->Wfwd[n][c] = rade_cexp(theta);
+            ofdm->Wfwd[c][n] = rade_cexp(theta);
         }
     }
 
@@ -101,8 +101,8 @@ void rade_ofdm_init(rade_ofdm *ofdm, int bottleneck) {
     memset(ofdm->pend, 0, sizeof(ofdm->pend));
     for (int n = 0; n < M; n++) {
         for (int c = 0; c < Nc; c++) {
-            ofdm->p[n] = rade_cadd(ofdm->p[n], rade_cmul(ofdm->P[c], ofdm->Winv[c][n]));
-            ofdm->pend[n] = rade_cadd(ofdm->pend[n], rade_cmul(ofdm->Pend[c], ofdm->Winv[c][n]));
+            ofdm->p[n] = rade_cadd(ofdm->p[n], rade_cmul(ofdm->P[c], ofdm->Winv[n][c]));
+            ofdm->pend[n] = rade_cadd(ofdm->pend[n], rade_cmul(ofdm->Pend[c], ofdm->Winv[n][c]));
         }
     }
 
@@ -214,10 +214,7 @@ void rade_ofdm_idft(const rade_ofdm *ofdm, RADE_COMP *time_out, const RADE_COMP 
     int Nc = ofdm->nc;
 
     for (int n = 0; n < M; n++) {
-        time_out[n] = rade_czero();
-        for (int c = 0; c < Nc; c++) {
-            time_out[n] = rade_cadd(time_out[n], rade_cmul(freq_in[c], ofdm->Winv[c][n]));
-        }
+        time_out[n] = rade_cdot_comp(freq_in, ofdm->Winv[n], Nc);
     }
 }
 
@@ -227,13 +224,15 @@ void rade_ofdm_insert_cp(const rade_ofdm *ofdm, RADE_COMP *time_out, const RADE_
     int Ncp = ofdm->ncp;
 
     /* Cyclic prefix: copy last Ncp samples to front */
-    for (int n = 0; n < Ncp; n++) {
-        time_out[n] = time_in[M - Ncp + n];
-    }
+    memcpy(time_out, &time_in[M - Ncp], sizeof(RADE_COMP) * Ncp);
+    //for (int n = 0; n < Ncp; n++) {
+    //    time_out[n] = time_in[M - Ncp + n];
+    //}
     /* Copy main symbol */
-    for (int n = 0; n < M; n++) {
-        time_out[Ncp + n] = time_in[n];
-    }
+    memcpy(&time_out[Ncp], time_in, sizeof(RADE_COMP) * M);
+    //for (int n = 0; n < M; n++) {
+    //    time_out[Ncp + n] = time_in[n];
+    //}
 }
 
 /* Modulate one modem frame */
@@ -329,10 +328,7 @@ void rade_ofdm_dft(const rade_ofdm *ofdm, RADE_COMP *freq_out, const RADE_COMP *
     int Nc = ofdm->nc;
 
     for (int c = 0; c < Nc; c++) {
-        freq_out[c] = rade_czero();
-        for (int n = 0; n < M; n++) {
-            freq_out[c] = rade_cadd(freq_out[c], rade_cmul(time_in[n], ofdm->Wfwd[n][c]));
-        }
+        freq_out[c] = rade_cdot_comp(time_in, ofdm->Wfwd[c], M);
     }
 }
 
@@ -342,9 +338,10 @@ void rade_ofdm_remove_cp(const rade_ofdm *ofdm, RADE_COMP *time_out, const RADE_
     int Ncp = ofdm->ncp;
 
     /* Skip CP and apply time offset */
-    for (int n = 0; n < M; n++) {
-        time_out[n] = time_in[Ncp + time_offset + n];
-    }
+    memcpy(time_out, &time_in[Ncp + time_offset], sizeof(RADE_COMP) * M);
+    //for (int n = 0; n < M; n++) {
+    //    time_out[n] = time_in[Ncp + time_offset + n];
+    //}
 }
 
 /* Estimate pilots using 3-pilot LS fit */
@@ -546,7 +543,7 @@ int rade_ofdm_demod_eoo(const rade_ofdm *ofdm, float *z_hat, const RADE_COMP *rx
         RADE_COMP sum = rade_czero();
         sum = rade_cadd(sum, rade_cdiv(rx_sym[0][c], ofdm->P[c]));
         sum = rade_cadd(sum, rade_cdiv(rx_sym[1][c], ofdm->Pend[c]));
-        sum = rade_cadd(sum, rade_cdiv(rx_sym[Ns + 1][c], ofdm->Pend[c]));
+        sum = rade_cadd(sum, rade_cdiv(rx_sym[Ns][c], ofdm->Pend[c]));
         float phase_offset = rade_cangle(sum);
 
         /* Correct all symbols */

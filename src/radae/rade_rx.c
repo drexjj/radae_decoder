@@ -222,14 +222,16 @@ int rade_rx_process(rade_rx_state *rx, float *features_out, float *eoo_out, cons
         float w = 2.0f * M_PI * rx->fmax / Fs;
         RADE_COMP rx_corrected[RADE_NMF + RADE_M + RADE_NCP];
 
+        RADE_COMP rx_phase;
         for (int n = 0; n < Nmf + M + Ncp; n++) {
-            rx->rx_phase = rade_cmul(rx->rx_phase, rade_cexp(-w));
-            rx_corrected[n] = rade_cmul(rx->rx_buf[rx->tmax - Ncp + n], rx->rx_phase);
+            rx_phase = rade_cmul(rx->rx_phase, rade_cexp(-w*(n+1)));
+            rx_corrected[n] = rade_cmul(rx->rx_buf[rx->tmax - Ncp + n], rx_phase);
         }
+        rx->rx_phase = rx_phase;
 
         /* Normalize phase to prevent drift */
-        float phase_mag = rade_cabs(rx->rx_phase);
-        rx->rx_phase = rade_cscale(rx->rx_phase, 1.0f / phase_mag);
+        //float phase_mag = rade_cabs(rx->rx_phase);
+        //rx->rx_phase = rade_cscale(rx->rx_phase, 1.0f / phase_mag);
 
         /* Demodulate OFDM frame */
         float z_hat[RADE_NZMF * RADE_LATENT_DIM];

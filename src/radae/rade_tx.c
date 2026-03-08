@@ -209,6 +209,10 @@ int rade_tx_state_eoo(rade_tx_state *tx, RADE_COMP *tx_out) {
                 int bit_idx = (d * Nc + c) * 2;
                 freq_sym[c].real = tx->eoo_bits[bit_idx];
                 freq_sym[c].imag = tx->eoo_bits[bit_idx + 1];
+                if (tx->ofdm.bottleneck == 3) {
+                    freq_sym[c] = rade_tanh_limit(freq_sym[c]);
+                }
+                freq_sym[c] = rade_cscale(freq_sym[c], tx->ofdm.pilot_gain);
             }
 
             /* IDFT → time domain, insert CP, write to tx_out */

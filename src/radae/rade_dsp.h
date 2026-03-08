@@ -202,6 +202,43 @@ static inline RADE_COMP rade_cone(void) {
     return c;
 }
 
+static inline RADE_COMP rade_cdot_comp(const RADE_COMP* a, const RADE_COMP* b, int n)
+{
+    RADE_COMP c = {0.f, 0.f};
+
+    if (n == 1) 
+    {
+        c = rade_cmul(a[0], b[0]);
+    }
+    else if (n > 1)
+    {
+        int midpoint = floor(n / 2);
+        RADE_COMP left = rade_cdot_comp(a, b, midpoint);
+        RADE_COMP right = rade_cdot_comp(&a[midpoint], &b[midpoint], n - midpoint);
+        c = rade_cadd(left, right);
+    }
+    return c;
+}
+
+static inline RADE_COMP rade_cdot_float(const RADE_COMP* a, const float* b, int n)
+{
+    RADE_COMP c = {0.f, 0.f};
+
+    if (n == 1) 
+    {
+        c.real = a[0].real * b[0];
+        c.imag = a[0].imag * b[0];
+    }
+    else if (n > 1)
+    {
+        int midpoint = floor(n / 2);
+        RADE_COMP left = rade_cdot_float(a, b, midpoint);
+        RADE_COMP right = rade_cdot_float(&a[midpoint], &b[midpoint], n - midpoint);
+        c = rade_cadd(left, right);
+    }
+    return c;
+}
+
 /*---------------------------------------------------------------------------*\
                            VECTOR OPERATIONS
 \*---------------------------------------------------------------------------*/
