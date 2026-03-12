@@ -118,6 +118,14 @@ sudo apt-get install build-essential cmake \
 sudo apt-get install libpulse-dev
 ```
 
+### Install dependencies for macOS
+You will need Xcode command line tools and homebrew.
+
+```
+brew install automake libtool git sox cmake wget pkgconf \
+gtk+3 hamlib portaudio 
+```
+
 ## Build Instructions
 
 ```bash
