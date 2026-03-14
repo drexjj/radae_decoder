@@ -16,41 +16,51 @@ static std::vector<AudioDevice> enumerate_alsa(bool capture)
 {
     std::vector<AudioDevice> devices;
     fprintf(stderr, "Enumerating ALSA devices\n");
-    
-    void** hints = nullptr;
-    if (snd_device_name_hint(-1, "pcm", &hints) < 0)
-        return devices;
 
-    for (void** hint = hints; *hint; ++hint) {
-        char* name = snd_device_name_get_hint(*hint, "NAME");
-        char* desc = snd_device_name_get_hint(*hint, "DESC");
-        char* ioid = snd_device_name_get_hint(*hint, "IOID");
+    int card = -1;
+    while (snd_card_next(&card) == 0 && card >= 0) {
+        snd_ctl_t* ctl = nullptr;
+        char card_id[32];
+        snprintf(card_id, sizeof(card_id), "hw:%d", card);
 
-        /* ioid: "Input", "Output", or nullptr (both directions) */
-        bool ok = !ioid ||
-                  ( capture && std::string(ioid) == "Input")  ||
-                  (!capture && std::string(ioid) == "Output");
+        if (snd_ctl_open(&ctl, card_id, 0) < 0)
+            continue;
 
-        if (ok && name) {
+        snd_ctl_card_info_t* card_info = nullptr;
+        snd_ctl_card_info_alloca(&card_info);
+        const char* card_name = "";
+        if (snd_ctl_card_info(ctl, card_info) == 0)
+            card_name = snd_ctl_card_info_get_name(card_info);
+
+        int dev = -1;
+        while (snd_ctl_pcm_next_device(ctl, &dev) == 0 && dev >= 0) {
+            snd_pcm_info_t* pcm_info = nullptr;
+            snd_pcm_info_alloca(&pcm_info);
+            snd_pcm_info_set_device(pcm_info, dev);
+            snd_pcm_info_set_subdevice(pcm_info, 0);
+            snd_pcm_info_set_stream(pcm_info,
+                capture ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK);
+
+            if (snd_ctl_pcm_info(ctl, pcm_info) < 0)
+                continue;  // device doesn't support this direction
+
+            const char* dev_name = snd_pcm_info_get_name(pcm_info);
+
             AudioDevice ad;
-            ad.hw_id = name;
-            if (desc) {
-                /* ALSA descriptions often have a newline; use just the first line */
-                std::string d(desc);
-                auto nl = d.find('\n');
-                ad.name = (nl != std::string::npos) ? d.substr(0, nl) : d;
-            } else {
-                ad.name = name;
-            }
+
+            char hw_id[32];
+            snprintf(hw_id, sizeof(hw_id), "plughw:%d,%d", card, dev);
+            ad.hw_id = hw_id;
+
+            char label[256];
+            snprintf(label, sizeof(label), "plughw:%d,%d  (%s: %s)",
+                     card, dev, card_name, dev_name ? dev_name : "");
+            ad.name = label;
+
             devices.push_back(std::move(ad));
         }
-
-        free(name);
-        free(desc);
-        free(ioid);
+        snd_ctl_close(ctl);
     }
-
-    snd_device_name_free_hint(hints);
     return devices;
 }
 

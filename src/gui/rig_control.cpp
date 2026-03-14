@@ -269,7 +269,7 @@ static void force_netrigctl_ptt_rig(RIG* rig, rig_model_t model_id, bool use_tcp
 {
     if (!rig || !use_tcp || model_id != RIG_MODEL_NETRIGCTL) return;
     /* Avoid MIC/DATA mode ambiguity on some RigCtl servers. */
-    rig->state.ptt_type = RIG_PTT_RIG;
+    rig->caps->ptt_type = RIG_PTT_RIG;
     rig->state.pttport.type.ptt = RIG_PTT_RIG;
 }
 
