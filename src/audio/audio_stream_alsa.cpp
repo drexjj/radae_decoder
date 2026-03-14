@@ -176,15 +176,27 @@ AudioError AudioStream::write(const void* buffer, unsigned long frames)
 {
     if (!impl_ || !impl_->pcm) return AUDIO_ERROR;
 
-    snd_pcm_sframes_t n = snd_pcm_writei(impl_->pcm, buffer, frames);
-    if (n == -EPIPE) {
-        /* underrun – recover */
-        snd_pcm_prepare(impl_->pcm);
-        return AUDIO_ERROR;
-    }
-    if (n < 0) {
-        snd_pcm_recover(impl_->pcm, static_cast<int>(n), 0);
-        return AUDIO_ERROR;
+    const int16_t* ptr = static_cast<const int16_t*>(buffer);
+    unsigned long remaining = frames;
+
+    while (remaining > 0) {
+        snd_pcm_sframes_t n = snd_pcm_writei(impl_->pcm, ptr, remaining);
+        if (n == -EPIPE) {
+            // underrun — recover and retry
+            fprintf(stderr, "ALSA: underrun, recovering\n");
+            snd_pcm_prepare(impl_->pcm);
+            continue;
+        }
+        if (n < 0) {
+            int err = snd_pcm_recover(impl_->pcm, static_cast<int>(n), 0);
+            if (err < 0) {
+                fprintf(stderr, "ALSA: write error: %s\n", snd_strerror(err));
+                return AUDIO_ERROR;
+            }
+            continue;
+        }
+        ptr       += n * impl_->channels;
+        remaining -= static_cast<unsigned long>(n);
     }
     return AUDIO_OK;
 }
